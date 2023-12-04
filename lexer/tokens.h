@@ -2,6 +2,7 @@
 #define TOKENS_H
 
 #pragma once
+#include <string.h>
 #include <stdlib.h>
 #include "../include/tokenlist.h"
 
@@ -12,24 +13,31 @@ typedef struct Token{
     char* content;
 } Token;
 
-Token* getLastToken(Token* _Token){
-    Token* currToken = _Token;
-    while(currToken->next != NULL){
-        currToken = currToken->next;
-    }
+typedef struct TokenHead{
+    Token* first;
+    Token* last;
+} TokenHead;
 
-    return currToken;
-}
-
-void addToken(Token* head, int _Type, char* _Content){
+void createList(TokenHead* head, int _Type, char* _Content){
     Token* newToken = (Token*) malloc(sizeof(Token));
     newToken->type = _Type;
-    newToken->content = _Content;
+    newToken->content = strdup(_Content);
 
-    // Avoid overwriting an existing token, instead, add the new one at the end of the list
-    Token* lastToken = getLastToken(head);
+    head->first = newToken;
+    head->last = newToken;
+}
+
+void addToken(TokenHead* head, int _Type, char* _Content){
+    Token* newToken = (Token*) malloc(sizeof(Token));
+    newToken->type = _Type;
+    newToken->content = strdup(_Content);
+
+    Token* lastToken = head->last;
+
     lastToken->next = newToken;
     newToken->prev = lastToken;
+
+    head->last = newToken;
 }
 
 #endif

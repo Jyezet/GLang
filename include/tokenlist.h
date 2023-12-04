@@ -11,8 +11,10 @@ enum TOKEN{
     /* --- Literals --- */
     STRING_LITERAL,    
     CHAR_LITERAL,
-    NUMERIC_LITERAL,
-    FNUMERIC_LITERAL,
+    NUMERIC_LITERAL, // 4
+    FNUMERIC_LITERAL, // 4.2
+    NNUMERIC_LITERAL, // -4
+    FNNUMERIC_LITERAL, // -4.2
     BOOL_LITERAL,
 
     /* --- Statements --- */
