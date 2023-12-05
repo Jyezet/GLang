@@ -5,14 +5,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-extern inline bool isNewline(char _Character){
-    return _Character == '\n' || _Character == '\r';
-}
-
-extern inline bool isEmpty(char _Character){
-    return _Character == ' ' || _Character == '\t' || _Character == '\f' || isNewline(_Character);
-}
-
 extern inline bool isLetter(char _Character){
     return (_Character >= 'a' && _Character <= 'z') || (_Character >= 'A' && _Character <= 'Z');
 }
@@ -31,6 +23,10 @@ extern inline bool isEndOfString(char _Character){
 
 extern inline bool isIdentifier(char _Character){
     return isDigit(_Character) || isLetter(_Character) || _Character == '_';
+}
+
+extern inline bool isValidCharacter(char _Character){
+    return isNumeric(_Character) || isLetter(_Character) || _Character == '_';
 }
 
 extern inline bool isSymbol(char _Character){

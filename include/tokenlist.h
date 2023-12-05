@@ -4,8 +4,9 @@
 #define TOKENLIST_H
 
 enum TOKEN{
-    ROOT,
+    EOI,
     END,
+    BLANK,
     IDENTIFIER, // Variable/function/enum/class/etc names
 
     /* --- Literals --- */

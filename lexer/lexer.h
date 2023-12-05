@@ -29,43 +29,32 @@ char* loadFile(const char* _Loc){
 
 void skipComments(Tokenizer* _Tok){
     if(_Tok->start[0] == '/' && _Tok->start[1] == '/'){
-        while(!isNewline(*_Tok->start)){
-            _Tok->start ++;
+        while(*_Tok->start != '\r' && *_Tok->start != '\n'){
+            _Tok->start++;
         }
-        _Tok->start ++;
-        return;
-    }
-    
-    if(_Tok->start[0] == '/' && _Tok->start[1] == '*'){
-        // Jump to the next position until a */ is reached
-        while(_Tok->start[0] != '*' && _Tok->start[1] != '/'){
+    } else if(_Tok->start[0] == '/' && _Tok->start[1] == '*'){
+        // Jump to the next position until a */ is at the left of the tokenizer's left pointer
+        while(_Tok->start[-1] != '/' && _Tok->start[-2] != '*'){
             if(isEndOfString(*_Tok->start)){
                 // Comment hasn't been enclosed correctly, throw error
-                THROW_EXC("Unenclosed multi-line comment");
+                THROW_EXC("Unenclosed multi-line comment (Hint: Did you forget to write an '*/' encloser?).");
             }
 
-            _Tok->start ++;
+            _Tok->start++;
         }
-
-        _Tok->start += 2;
-    }
-}
-
-void skipSpaces(Tokenizer* _Tok){
-    while(isEmpty(*_Tok->start)){
-        _Tok->start++;
     }
 }
 
 double parseNumber(const char* _Text, int base){
+    // TODO: Scientific notation
     double number = 0;
     bool negative = false;
     bool decimal = false;
-    double decimal_pos = 1;
+    int decimal_pos = 1;
     int constant = 10;
     for(int i = 0; !isEndOfString(_Text[i]); i++){
         if(isDigit(_Text[i])){
-            number = number * base + _Text[i] - 48;
+            number = number * base + _Text[i] - '0';
             if(decimal) { decimal_pos *= base; }
         } else if(_Text[i] == '-'){
             negative = true;
@@ -84,8 +73,8 @@ double parseNumber(const char* _Text, int base){
 Token* identifyToken(Tokenizer* _Tok){
     int type;
     char* content;
+    static Token lastTok;
 
-    // TODO: Fix bug where first token is processed twice
     switch(*_Tok->start){
         case DELIM:
             type = END;
@@ -121,7 +110,9 @@ Token* identifyToken(Tokenizer* _Tok){
         case '\f':
         case '\n':
         case '\r':
-            skipSpaces(_Tok);
+            type = BLANK;
+            content = "";
+            _Tok->start++; // Skip blank characters
             break;
         case '=':
             if(_Tok->start[1] == '='){ // ==
@@ -212,14 +203,25 @@ Token* identifyToken(Tokenizer* _Tok){
                 break;
             } 
             
-            // TODO: Find a way to distinguish between a negative number and a substraction without spaces (eg: 4 -2)
-            // Suggestion: Check if there's an arithmetical operator before this token, if there isn't, turn it into a positive number
-            // And add a substraction operator
-            if(isNumeric(_Tok->start[1])){ // Negative number
-                type = NUMERIC_LITERAL;
+            if(isNumeric(_Tok->start[1])){
+                if(isNumeric(*lastTok.content)){
+                    type = SUBSTRACT_OP;
+                    content = "-";
+                    _Tok->start += strlen(content);
+                    break;
+                }
+
+                type = NNUMERIC_LITERAL;
                 _Tok->end = _Tok->start;
-                while(isNumeric(*_Tok->end)){
+                int dotsCounter = 0;
+                while(isNumeric(_Tok->end[1])){
                     _Tok->end++;
+                    if(dotsCounter == 1){ type = FNNUMERIC_LITERAL; }
+                    else if(dotsCounter >= 2){ THROW_EXC("Malformed float literal (Hint: Did you accidentally write more than one dot?)"); }
+
+                    if(*_Tok->end == '.'){
+                        dotsCounter++;
+                    }
                 }
 
                 content = getStrRange(_Tok->start, _Tok->end);
@@ -245,6 +247,14 @@ Token* identifyToken(Tokenizer* _Tok){
                 _Tok->start += strlen(content);
                 break;
             }
+
+            // In case a multi-line comment is not processed correctly
+            if(_Tok->start[1] == '/'){
+                _Tok->start += 2;
+                type = BLANK;
+                content = "";
+                break;
+            }
             
             content = "*";
             type = MULTIPLY_OP; // *
@@ -252,16 +262,18 @@ Token* identifyToken(Tokenizer* _Tok){
             break;
         case '%':
             content = "%";
-            type = MOD_OP; // %
+            type = MOD_OP;
             _Tok->start += strlen(content);
             break;
         case '/':
             if(_Tok->start[1] == '/' || _Tok->start[1] == '*'){ // /* or // (Comment)
                 skipComments(_Tok);
+                type = BLANK;
+                content = "";
                 break;
             }
 
-            if(_Tok->start[1] == '='){ // /=
+            if(_Tok->start[1] == '='){
                 content = "/=";
                 type = DIVIDE_ASSIGN_OP;
                 _Tok->start += strlen(content);
@@ -269,7 +281,7 @@ Token* identifyToken(Tokenizer* _Tok){
             }
 
             content = "/";
-            type = DIVIDE_OP; // /
+            type = DIVIDE_OP;
             _Tok->start += strlen(content);
             break;
         case '(':
@@ -323,7 +335,7 @@ Token* identifyToken(Tokenizer* _Tok){
             _Tok->end = _Tok->start;
 
             // Scroll to the next character only if it's a character usable in an identifier ([a-zA-Z0-9]|_)
-            while(isIdentifier(_Tok->end[1])){
+            while(isValidCharacter(_Tok->end[1])){
                 _Tok->end++;
             }
 
@@ -414,23 +426,32 @@ Token* identifyToken(Tokenizer* _Tok){
     Token* tok = (Token*) malloc(sizeof(Token));
     tok->type = type;
     tok->content = strdup(content);
+
+    // Don't cache blank tokens!
+    if(tok->type != BLANK){
+        lastTok = *tok;
+    }
+
     return tok;
 }
 
-TokenHead* parseTokens(Tokenizer* _Tok){
+TokenHead* parseTokens(Tokenizer* _Tok, char* endOfCode){
     TokenHead* head = (TokenHead*) malloc(sizeof(TokenHead));
     Token* newToken;
     int first = 1;
 
-    while(!isEndOfString(*_Tok->start)){
+    while(_Tok->start < endOfCode){
         newToken = identifyToken(_Tok);
 
-        if(first == 1)
+        if(first == 1 && newToken && newToken->type != BLANK)
         { createList(head, newToken->type, newToken->content); first = 0; continue; }
 
-        addToken(head, newToken->type, newToken->content);
+        if(newToken->type != BLANK){
+            addToken(head, newToken->type, newToken->content);
+        }
+
         free(newToken);
-        _Tok->start++;
+        //_Tok->start++; I'm actually leaving this bug causing line as a monument to human stupidity (Tokenizer scrolling is already done inside the identifyToken function, causing double scrolling and thus skipping some chars)
     }
 
     return head;
@@ -441,7 +462,7 @@ TokenHead* lexer(char* filename){
     char code[] = "let var = \"code\"; let var2 = \"code2\";\nprint(\"code {} code {}\", [$var, $var2]);";
     Tokenizer tokenizer;
     tokenizer.start = code;
-    TokenHead* tokens = parseTokens(&tokenizer);
+    TokenHead* tokens = parseTokens(&tokenizer, code + strlen(code));
     return tokens;
 }
 
