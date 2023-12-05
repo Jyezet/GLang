@@ -4,13 +4,11 @@
 #pragma once
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "utils.h"
 #include "../include/definitions.h"
 #include "../include/exceptions.h"
 #include "tokens.h"
-#include "tokenizer.h"
 
 char* loadFile(const char* _Loc){
     FILE* file = fopen(_Loc, "r");
@@ -322,62 +320,62 @@ Token* identifyToken(Tokenizer* _Tok){
                 break;
             }
 
-            if(strcmp(content, "while") == 0){
+            if(compare(content, "while") == 0){
                 type = WHILE_STMT;
                 break;
             }
 
-            if(strcmp(content, "for") == 0){
+            if(compare(content, "for") == 0){
                 type = FOR_STMT;
                 break;
             }
 
-            if(strcmp(content, "fn") == 0){
+            if(compare(content, "fn") == 0){
                 type = FN_KEYWORD;
                 break;
             }
 
-            if(strcmp(content, "if") == 0){
+            if(compare(content, "if") == 0){
                 type = IF_STMT;
                 break;
             }
 
-            if(strcmp(content, "else") == 0){
+            if(compare(content, "else") == 0){
                 type = ELSE_STMT;
                 break;
             }
 
-            if(strcmp(content, "ret") == 0){
+            if(compare(content, "ret") == 0){
                 type = RET_KEYWORD;
                 break;
             }
 
-            if(strcmp(content, "let") == 0){
+            if(compare(content, "let") == 0){
                 type = LET_KEYWORD;
                 break;
             }
 
-            if(strcmp(content, "const") == 0){
+            if(compare(content, "const") == 0){
                 type = CONST_KEYWORD;
                 break;
             }
 
-            if(strcmp(content, "mem") == 0){
+            if(compare(content, "mem") == 0){
                 type = MEM_KEYWORD;
                 break;
             }
 
-            if(strcmp(content, "bring") == 0){
+            if(compare(content, "bring") == 0){
                 type = BRING_KEYWORD;
                 break;
             }
 
-            if(strcmp(content, "include") == 0){
+            if(compare(content, "include") == 0){
                 type = INCLUDE_KEYWORD;
                 break;
             }
 
-            if(strcmp(content, "true") == 0 || strcmp(content, "false") == 0){
+            if(compare(content, "true") == 0 || compare(content, "false") == 0){
                 type = BOOL_LITERAL;
                 break;
             }
@@ -386,10 +384,10 @@ Token* identifyToken(Tokenizer* _Tok){
             break;
     }
 
-    _Tok->start += strlen(content);
+    _Tok->start += length(content);
     Token* tok = (Token*) malloc(sizeof(Token));
     tok->type = type;
-    tok->content = strdup(content);
+    tok->content = duplicate(content);
 
     // Don't cache blank tokens!
     if(tok->type != BLANK){
@@ -425,7 +423,7 @@ TokenHead* lexer_entryPoint(char* filename){
     char* code = loadFile(filename);
     Tokenizer* tokenizer = (Tokenizer*) malloc(sizeof(Tokenizer));
     tokenizer->start = code;
-    TokenHead* tokens = parseTokens(tokenizer, code + strlen(code));
+    TokenHead* tokens = parseTokens(tokenizer, code + length(code));
     return tokens;
 }
 

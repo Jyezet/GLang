@@ -2,9 +2,14 @@
 #define TOKENS_H
 
 #pragma once
-#include <string.h>
 #include <stdlib.h>
+#include "utils.h"
 #include "../include/tokenlist.h"
+
+typedef struct Tokenizer{
+    char* start;
+    char* end;
+} Tokenizer;
 
 typedef struct Token{
     struct Token* prev;
@@ -21,7 +26,7 @@ typedef struct TokenHead{
 void createList(TokenHead* head, int _Type, char* _Content){
     Token* newToken = (Token*) malloc(sizeof(Token));
     newToken->type = _Type;
-    newToken->content = strdup(_Content);
+    newToken->content = duplicate(_Content);
 
     head->first = newToken;
     head->last = newToken;
@@ -30,7 +35,7 @@ void createList(TokenHead* head, int _Type, char* _Content){
 void addToken(TokenHead* head, int _Type, char* _Content){
     Token* newToken = (Token*) malloc(sizeof(Token));
     newToken->type = _Type;
-    newToken->content = strdup(_Content);
+    newToken->content = duplicate(_Content);
 
     Token* lastToken = head->last;
 
