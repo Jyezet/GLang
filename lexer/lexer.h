@@ -62,6 +62,7 @@ double parseNumber(const char* _Text, int base){
             decimal = true;
         } else {
             printf("Error, '%c' is not numeric", _Text[i]);
+            exit(-1);
         }
     }
     
@@ -79,31 +80,28 @@ Token* identifyToken(Tokenizer* _Tok){
         case DELIM:
             type = END;
             content = ";";
-            _Tok->start += strlen(content);
             break;
         case STRING_SYMBOL:
+            _Tok->end = _Tok->start;
             do {
                 // If tokenizer's end reaches the end of the code, this means the string hasn't been enclosed correctly.
                 if(isEndOfString(*_Tok->end)){
                     THROW_EXC("Malformed string literal (Hint: Did you forget to enclose it with 2 double quotes?).");
                 }
 
-                _Tok->end++;
-            } while(*_Tok->end != STRING_SYMBOL && _Tok->end[-1] != ESCAPE_SYMBOL); // do while because the first symbol is already a quote
+                _Tok->end = getNextChar(_Tok->end, STRING_SYMBOL);
+            } while(_Tok->end[-1] == ESCAPE_SYMBOL);
 
             type = STRING_LITERAL;
             content = getStrRange(_Tok->start, _Tok->end);
-            _Tok->start = _Tok->end + 1;
             break;
         case CHAR_SYMBOL:
             _Tok->end = _Tok->start + 2; // Set the tokenizer's end pointer at wherever the closing quote should be, to check it's there
             if(*_Tok->end != CHAR_SYMBOL){
-                THROW_EXC("Malformed char literal (Hint: Is your literal more than 1 charater long? Did you miss a quote?)");
+                THROW_EXC("Malformed char literal (Hint: Is your literal more than 1 charater long? Did you miss a quote? Did you escape a single quote? (It's not necessary))");
             }
             type = CHAR_LITERAL;
-            content = (char*) malloc(1);
-            *content = _Tok->start[1];
-            _Tok->start = _Tok->end + 1;
+            content = getStrRange(_Tok->start, _Tok->end);
             break;
         case ' ':
         case '\t':
@@ -111,95 +109,80 @@ Token* identifyToken(Tokenizer* _Tok){
         case '\n':
         case '\r':
             type = BLANK;
-            content = "";
-            _Tok->start++; // Skip blank characters
+            content = " ";
             break;
         case '=':
             if(_Tok->start[1] == '='){ // ==
                 content = "==";
                 type = EQUALS_OP;
-                _Tok->start += strlen(content);
                 break;
             }
 
             content = "=";
             type = ASSIGN_OP; // =
-            _Tok->start += strlen(content);
             break;
         case '!':
             if(_Tok->start[1] == '='){ // !=
                 content = "!=";
                 type = NOT_EQUAL_OP;
-                _Tok->start += strlen(content);
                 break;
             }
             
             content = "!";
             type = NOT_OP; // !
-            _Tok->start += strlen(content);
             break;
         case '>':
             if(_Tok->start[1] == '='){ // >=
                 content = ">=";
                 type = GREATER_OR_EQUAL_TO_OP;
-                _Tok->start += strlen(content);
                 break;
             }
             
             content = ">";
             type = GREATER_THAN_OP; // >
-            _Tok->start += strlen(content);
             break;
         case '<':
             if(_Tok->start[1] == '='){ // <=
                 content = "<=";
                 type = LOWER_OR_EQUAL_TO_OP;
-                _Tok->start += strlen(content);
                 break;
             }
             
             content = "<";
             type = LOWER_THAN_OP; // <
-            _Tok->start += strlen(content);
             break;
         case '+':
             if(_Tok->start[1] == '+'){ // ++
                 content = "+";
                 type = INCREMENT_OP;
-                _Tok->start += strlen(content);
                 break;
             }
             
             if(_Tok->start[1] == '='){ // +=
                 content = "=";
                 type = SUM_ASSIGN_OP;
-                _Tok->start += strlen(content);
                 break;
             }
 
             content = "+";
             type = SUM_OP; // +
-            _Tok->start += strlen(content);
             break;
         case '-':
             if(_Tok->start[1] == '-'){ // --
                 content = "--";
                 type = DECREMENT_OP;
-                _Tok->start += strlen(content);
                 break;
             }
             
             if(_Tok->start[1] == '='){ // -=
                 content = "-=";
                 type = SUBSTR_ASSIGN_OP;
-                _Tok->start += strlen(content);
                 break;
             } 
             
             if(_Tok->start[1] == '>'){ // ->
                 content = "->";
                 type = CODE_BLOCK_OP;
-                _Tok->start += strlen(content);
                 break;
             } 
             
@@ -207,7 +190,6 @@ Token* identifyToken(Tokenizer* _Tok){
                 if(isNumeric(*lastTok.content)){
                     type = SUBSTRACT_OP;
                     content = "-";
-                    _Tok->start += strlen(content);
                     break;
                 }
 
@@ -225,45 +207,38 @@ Token* identifyToken(Tokenizer* _Tok){
                 }
 
                 content = getStrRange(_Tok->start, _Tok->end);
-                _Tok->start = _Tok->end + 1;
                 break;
             } 
             
             content = "-";
-            type = SUBSTRACT_OP; // -
-            _Tok->start += strlen(content);
+            type = SUBSTRACT_OP;
             break;
         case '*':
-            if(_Tok->start[1] == '*'){ // **
+            if(_Tok->start[1] == '*'){
                 content = "**";
                 type = POWER_OP;
-                _Tok->start += strlen(content);
                 break;
             }
             
             if(_Tok->start[1] == '='){ // *=
                 content = "*=";
                 type = MULT_ASSIGN_OP;
-                _Tok->start += strlen(content);
                 break;
             }
 
             // In case a multi-line comment is not processed correctly
             if(_Tok->start[1] == '/'){
-                _Tok->start += 2;
                 type = BLANK;
-                content = "";
+                content = "  ";
                 break;
             }
             
             content = "*";
             type = MULTIPLY_OP; // *
-            _Tok->start += strlen(content);
             break;
         case '%':
             content = "%";
             type = MOD_OP;
-            _Tok->start += strlen(content);
             break;
         case '/':
             if(_Tok->start[1] == '/' || _Tok->start[1] == '*'){ // /* or // (Comment)
@@ -276,60 +251,49 @@ Token* identifyToken(Tokenizer* _Tok){
             if(_Tok->start[1] == '='){
                 content = "/=";
                 type = DIVIDE_ASSIGN_OP;
-                _Tok->start += strlen(content);
                 break;
             }
 
             content = "/";
             type = DIVIDE_OP;
-            _Tok->start += strlen(content);
             break;
         case '(':
             content = "(";
             type = LEFT_PARENTH;
-            _Tok->start += strlen(content);
             break;
         case ')':
             content = ")";
             type = RIGHT_PARENTH;
-            _Tok->start += strlen(content);
             break;
         case '[':
             content = "[";
             type = LEFT_BRACKET;
-            _Tok->start += strlen(content);
             break;
         case ']':
             content = "]";
             type = RIGHT_BRACKET;
-            _Tok->start += strlen(content);
             break;
         case '{':
             content = "{";
             type = LEFT_CURLY;
-            _Tok->start += strlen(content);
             break;
         case '}':
             content = "}";
             type = RIGHT_CURLY;
-            _Tok->start += strlen(content);
             break;
         case '@':
             content = "@";
             type = ATTRIBUTE_OP;
-            _Tok->start += strlen(content);
             break;
         case ':':
             if(_Tok->start[1] == ':'){
                 content = "::";
                 type = SCOPE_RESOLVER_OP;
-                _Tok->start += strlen(content);
                 break;
             }
 
             content = ":";
             type = LIBRARY_RESOLVER_OP;
-            _Tok->start += strlen(content);
             break;
         default:
             _Tok->end = _Tok->start;
@@ -340,7 +304,6 @@ Token* identifyToken(Tokenizer* _Tok){
             }
 
             content = getStrRange(_Tok->start, _Tok->end); // Starting from this line, the tokenizer's pointers won't be used anymore
-            _Tok->start += strlen(content);
             
             // Identifiers that start with a number will be processed as numbers
             if(isNumeric(content[0])){
@@ -423,6 +386,7 @@ Token* identifyToken(Tokenizer* _Tok){
             break;
     }
 
+    _Tok->start += strlen(content);
     Token* tok = (Token*) malloc(sizeof(Token));
     tok->type = type;
     tok->content = strdup(content);
@@ -451,18 +415,17 @@ TokenHead* parseTokens(Tokenizer* _Tok, char* endOfCode){
         }
 
         free(newToken);
-        //_Tok->start++; I'm actually leaving this bug causing line as a monument to human stupidity (Tokenizer scrolling is already done inside the identifyToken function, causing double scrolling and thus skipping some chars)
+        //_Tok->start++; I'm actually leaving this bug-causing line as a monument to human stupidity (Tokenizer scrolling is already done inside the identifyToken function, causing double scrolling and thus skipping some chars)
     }
 
     return head;
 }
 
-TokenHead* lexer(char* filename){
-    //char* code = loadFile(filename);
-    char code[] = "let var = \"code\"; let var2 = \"code2\";\nprint(\"code {} code {}\", [$var, $var2]);";
-    Tokenizer tokenizer;
-    tokenizer.start = code;
-    TokenHead* tokens = parseTokens(&tokenizer, code + strlen(code));
+TokenHead* lexer_entryPoint(char* filename){
+    char* code = loadFile(filename);
+    Tokenizer* tokenizer = (Tokenizer*) malloc(sizeof(Tokenizer));
+    tokenizer->start = code;
+    TokenHead* tokens = parseTokens(tokenizer, code + strlen(code));
     return tokens;
 }
 

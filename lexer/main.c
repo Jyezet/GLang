@@ -3,13 +3,11 @@
 #include <stdlib.h>
 
 /* --- TESTING FILE ONLY --- */
-// TODO: Fix bug where string literal is split in half
 // TODO: Fix bug where multi-line comment is not detected
 int main(){
-    char code[] = "let var = 4 -2; /* test */ let var2 = \" code2 \"; print(\"code {} code {}\", [var, var2]);\n";
+    char code[] = "let var = -2.4; /* test */ let var2 = \"code2\"; print(\"code {} code {}\", [var, var2]);\n";
     Tokenizer* tok = (Tokenizer*) malloc(sizeof(Tokenizer));
     tok->start = code;
-
     TokenHead* head = parseTokens(tok, code + strlen(code));
     Token* curr = head->first;
     while(curr != head->last){

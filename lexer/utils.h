@@ -45,4 +45,11 @@ char* getStrRange(char* start, char* end){
     return str;
 }
 
+char* getNextChar(char* ptr, char target){
+    do {
+        ptr++;
+    } while(*ptr != target);
+    return ptr;
+}
+
 #endif
