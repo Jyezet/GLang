@@ -9,6 +9,7 @@
 typedef struct Tokenizer{
     char* start;
     char* end;
+    char* endOfInput;
 } Tokenizer;
 
 typedef struct Token{

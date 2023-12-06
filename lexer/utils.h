@@ -45,14 +45,16 @@ char* getStrRange(char* start, char* end){
     return str;
 }
 
-char* getNextChar(char* ptr, char target){
+char* getNextChar(char* ptr, int len, char target){
+    int scrolled = 0;
     do {
         ptr++;
-    } while(*ptr != target);
+        scrolled++;
+    } while(*ptr != target && scrolled <= len);
     return ptr;
 }
 
-int length(char* str){
+int length(const char* str){
     int length = 0;
     for(int i = 0; str[i] != '\0'; i++){
         length++;
@@ -61,7 +63,7 @@ int length(char* str){
     return length;
 }
 
-bool compare(char* str1, char* str2){
+bool compare(const char* str1, const char* str2){
     if(length(str1) != length(str2)){
         return false;
     }
@@ -75,11 +77,27 @@ bool compare(char* str1, char* str2){
     return true;
 }
 
-char* duplicate(char* str){
+char* duplicate(const char* str){
     int newStrLength = length(str) + 1;
     char* newStr = (char*) malloc(newStrLength);
     for(int i = 0; str[i] != '\0'; i++){
         newStr[i] = str[i];
+    }
+
+    newStr[newStrLength - 1] = '\0';
+    return newStr;
+}
+
+char* concatenate(const char* str1, const char* str2){
+    int str1offset = length(str1);
+    int newStrLength = str1offset + length(str2) + 1;
+    char* newStr = (char*) malloc(newStrLength);
+    for(int i = 0; str1[i] != '\0'; i++){
+        newStr[i] = str1[i];
+    }
+
+    for(int i = 0; str2[i] != '\0'; i++){
+        newStr[i + str1offset] = str2[i];
     }
 
     newStr[newStrLength - 1] = '\0';

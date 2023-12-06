@@ -1,18 +1,14 @@
 #include <stdio.h>
-#include "lexer.h"
 #include <stdlib.h>
+#include "lexer.h"
 
 /* --- TESTING FILE ONLY --- */
-// TODO: Fix bug where multi-line comment is not detected
+// TODO: Fix bug where a file not ending with newline overflows
 int main(){
-    char code[] = "let var = -2.4; /* test */ let var2 = \"code2\"; print(\"code {} code {}\", [var, var2]);\n";
-    Tokenizer* tok = (Tokenizer*) malloc(sizeof(Tokenizer));
-    tok->start = code;
-    TokenHead* head = parseTokens(tok, code + strlen(code));
-    Token* curr = head->first;
-    while(curr != head->last){
-        printf("Type: %i, content: \"%s\"\n", curr->type, curr->content);
-        curr = curr->next;
+    TokenHead* head = lexer_entryPoint("main.gl");
+
+    for(Token* curr = head->first; curr != head->last; curr = curr->next){
+        printf("Type: %i, content: %s\n", curr->type, curr->content);
     }
     
     return 0;

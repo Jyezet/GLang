@@ -31,15 +31,13 @@ void skipComments(Tokenizer* _Tok){
             _Tok->start++;
         }
     } else if(_Tok->start[0] == '/' && _Tok->start[1] == '*'){
-        // Jump to the next position until a */ is at the left of the tokenizer's left pointer
-        while(_Tok->start[-1] != '/' && _Tok->start[-2] != '*'){
-            if(isEndOfString(*_Tok->start)){
-                // Comment hasn't been enclosed correctly, throw error
-                THROW_EXC("Unenclosed multi-line comment (Hint: Did you forget to write an '*/' encloser?).");
-            }
+        _Tok->start += 2;
 
-            _Tok->start++;
-        }
+        do {
+            _Tok->start = getNextChar(_Tok->start, length(_Tok->start), '*');
+        } while(_Tok->start[1] != '/');
+
+        _Tok->start += 2;
     }
 }
 
@@ -86,7 +84,7 @@ Token* identifyToken(Tokenizer* _Tok){
                     THROW_EXC("Malformed string literal (Hint: Did you forget to enclose it with 2 double quotes?).");
                 }
 
-                _Tok->end = getNextChar(_Tok->end, STRING_SYMBOL);
+                _Tok->end = getNextChar(_Tok->end, length(_Tok->start), STRING_SYMBOL);
             } while(_Tok->end[-1] == ESCAPE_SYMBOL);
 
             type = STRING_LITERAL;
@@ -241,7 +239,7 @@ Token* identifyToken(Tokenizer* _Tok){
             if(_Tok->start[1] == '/' || _Tok->start[1] == '*'){
                 skipComments(_Tok);
                 type = BLANK;
-                content = duplicate("");
+                content = duplicate(""); // Content length is 0, tokenizer's start won't be scrolled wrongly
                 break;
             }
 
@@ -419,7 +417,7 @@ TokenHead* parseTokens(Tokenizer* _Tok){
     return head;
 }
 
-TokenHead* lexer_entryPoint(char* filename){
+TokenHead* lexer_entryPoint(const char* filename){
     char* code = loadFile(filename);
     Tokenizer* tokenizer = (Tokenizer*) malloc(sizeof(Tokenizer));
     tokenizer->start = code;
