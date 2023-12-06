@@ -46,7 +46,6 @@ void skipComments(Tokenizer* _Tok){
 double parseNumber(const char* _Text, int base){
     // TODO: Scientific notation
     double number = 0;
-    bool negative = false;
     bool decimal = false;
     int decimal_pos = 1;
     int constant = 10;
@@ -54,8 +53,8 @@ double parseNumber(const char* _Text, int base){
         if(isDigit(_Text[i])){
             number = number * base + _Text[i] - '0';
             if(decimal) { decimal_pos *= base; }
-        } else if(_Text[i] == '-'){
-            negative = true;
+        } else if(_Text[i] == '-' && i != 0){
+            printf("Error, '-' symbol can only be at the beginning of a number.");
         } else if(_Text[i] == '.'){
             decimal = true;
         } else {
@@ -64,7 +63,7 @@ double parseNumber(const char* _Text, int base){
         }
     }
     
-    if(negative) { number *= -1; }
+    if(_Text[0] == '-') { number *= -1; }
     number /= decimal_pos;
     return number;
 }
@@ -77,7 +76,7 @@ Token* identifyToken(Tokenizer* _Tok){
     switch(*_Tok->start){
         case DELIM:
             type = END;
-            content = ";";
+            content = duplicate(";");
             break;
         case STRING_SYMBOL:
             _Tok->end = _Tok->start;
@@ -107,79 +106,79 @@ Token* identifyToken(Tokenizer* _Tok){
         case '\n':
         case '\r':
             type = BLANK;
-            content = " ";
+            content = duplicate(" ");
             break;
         case '=':
             if(_Tok->start[1] == '='){ // ==
-                content = "==";
+                content = duplicate("==");
                 type = EQUALS_OP;
                 break;
             }
 
-            content = "=";
+            content = duplicate("=");
             type = ASSIGN_OP; // =
             break;
         case '!':
             if(_Tok->start[1] == '='){ // !=
-                content = "!=";
+                content = duplicate("!=");
                 type = NOT_EQUAL_OP;
                 break;
             }
             
-            content = "!";
+            content = duplicate("!");
             type = NOT_OP; // !
             break;
         case '>':
             if(_Tok->start[1] == '='){ // >=
-                content = ">=";
+                content = duplicate(">=");
                 type = GREATER_OR_EQUAL_TO_OP;
                 break;
             }
             
-            content = ">";
+            content = duplicate(">");
             type = GREATER_THAN_OP; // >
             break;
         case '<':
             if(_Tok->start[1] == '='){ // <=
-                content = "<=";
+                content = duplicate("<=");
                 type = LOWER_OR_EQUAL_TO_OP;
                 break;
             }
             
-            content = "<";
+            content = duplicate("<");
             type = LOWER_THAN_OP; // <
             break;
         case '+':
             if(_Tok->start[1] == '+'){ // ++
-                content = "+";
+                content = duplicate("++");
                 type = INCREMENT_OP;
                 break;
             }
             
             if(_Tok->start[1] == '='){ // +=
-                content = "=";
+                content = duplicate("+=");
                 type = SUM_ASSIGN_OP;
                 break;
             }
 
-            content = "+";
+            content = duplicate("+");
             type = SUM_OP; // +
             break;
         case '-':
             if(_Tok->start[1] == '-'){ // --
-                content = "--";
+                content = duplicate("--");
                 type = DECREMENT_OP;
                 break;
             }
             
             if(_Tok->start[1] == '='){ // -=
-                content = "-=";
+                content = duplicate("-=");
                 type = SUBSTR_ASSIGN_OP;
                 break;
             } 
             
             if(_Tok->start[1] == '>'){ // ->
-                content = "->";
+                content = duplicate("->");
                 type = CODE_BLOCK_OP;
                 break;
             } 
@@ -187,7 +186,7 @@ Token* identifyToken(Tokenizer* _Tok){
             if(isNumeric(_Tok->start[1])){
                 if(isNumeric(*lastTok.content)){
                     type = SUBSTRACT_OP;
-                    content = "-";
+                    content = duplicate("-");
                     break;
                 }
 
@@ -208,18 +207,18 @@ Token* identifyToken(Tokenizer* _Tok){
                 break;
             } 
             
-            content = "-";
+            content = duplicate("-");
             type = SUBSTRACT_OP;
             break;
         case '*':
             if(_Tok->start[1] == '*'){
-                content = "**";
+                content = duplicate("**");
                 type = POWER_OP;
                 break;
             }
             
             if(_Tok->start[1] == '='){ // *=
-                content = "*=";
+                content = duplicate("*=");
                 type = MULT_ASSIGN_OP;
                 break;
             }
@@ -227,70 +226,70 @@ Token* identifyToken(Tokenizer* _Tok){
             // In case a multi-line comment is not processed correctly
             if(_Tok->start[1] == '/'){
                 type = BLANK;
-                content = "  ";
+                content = duplicate("  ");
                 break;
             }
             
-            content = "*";
+            content = duplicate("*");
             type = MULTIPLY_OP; // *
             break;
         case '%':
-            content = "%";
+            content = duplicate("%");
             type = MOD_OP;
             break;
         case '/':
-            if(_Tok->start[1] == '/' || _Tok->start[1] == '*'){ // /* or // (Comment)
+            if(_Tok->start[1] == '/' || _Tok->start[1] == '*'){
                 skipComments(_Tok);
                 type = BLANK;
-                content = "";
+                content = duplicate("");
                 break;
             }
 
             if(_Tok->start[1] == '='){
-                content = "/=";
+                content = duplicate("/=");
                 type = DIVIDE_ASSIGN_OP;
                 break;
             }
 
-            content = "/";
+            content = duplicate("/");
             type = DIVIDE_OP;
             break;
         case '(':
-            content = "(";
+            content = duplicate("(");
             type = LEFT_PARENTH;
             break;
         case ')':
-            content = ")";
+            content = duplicate(")");
             type = RIGHT_PARENTH;
             break;
         case '[':
-            content = "[";
+            content = duplicate("[");
             type = LEFT_BRACKET;
             break;
         case ']':
-            content = "]";
+            content = duplicate("]");
             type = RIGHT_BRACKET;
             break;
         case '{':
-            content = "{";
+            content = duplicate("{");
             type = LEFT_CURLY;
             break;
         case '}':
-            content = "}";
+            content = duplicate("}");
             type = RIGHT_CURLY;
             break;
         case '@':
-            content = "@";
+            content = duplicate("@");
             type = ATTRIBUTE_OP;
             break;
         case ':':
             if(_Tok->start[1] == ':'){
-                content = "::";
+                content = duplicate("::");
                 type = SCOPE_RESOLVER_OP;
                 break;
             }
 
-            content = ":";
+            content = duplicate(":");
             type = LIBRARY_RESOLVER_OP;
             break;
         default:
@@ -320,62 +319,62 @@ Token* identifyToken(Tokenizer* _Tok){
                 break;
             }
 
-            if(compare(content, "while") == 0){
+            if(compare(content, "while")){
                 type = WHILE_STMT;
                 break;
             }
 
-            if(compare(content, "for") == 0){
+            if(compare(content, "for")){
                 type = FOR_STMT;
                 break;
             }
 
-            if(compare(content, "fn") == 0){
+            if(compare(content, "fn")){
                 type = FN_KEYWORD;
                 break;
             }
 
-            if(compare(content, "if") == 0){
+            if(compare(content, "if")){
                 type = IF_STMT;
                 break;
             }
 
-            if(compare(content, "else") == 0){
+            if(compare(content, "else")){
                 type = ELSE_STMT;
                 break;
             }
 
-            if(compare(content, "ret") == 0){
+            if(compare(content, "ret")){
                 type = RET_KEYWORD;
                 break;
             }
 
-            if(compare(content, "let") == 0){
+            if(compare(content, "let")){
                 type = LET_KEYWORD;
                 break;
             }
 
-            if(compare(content, "const") == 0){
+            if(compare(content, "const")){
                 type = CONST_KEYWORD;
                 break;
             }
 
-            if(compare(content, "mem") == 0){
+            if(compare(content, "mem")){
                 type = MEM_KEYWORD;
                 break;
             }
 
-            if(compare(content, "bring") == 0){
+            if(compare(content, "bring")){
                 type = BRING_KEYWORD;
                 break;
             }
 
-            if(compare(content, "include") == 0){
+            if(compare(content, "include")){
                 type = INCLUDE_KEYWORD;
                 break;
             }
 
-            if(compare(content, "true") == 0 || compare(content, "false") == 0){
+            if(compare(content, "true") || compare(content, "false")){
                 type = BOOL_LITERAL;
                 break;
             }
@@ -384,7 +383,6 @@ Token* identifyToken(Tokenizer* _Tok){
             break;
     }
 
-    _Tok->start += length(content);
     Token* tok = (Token*) malloc(sizeof(Token));
     tok->type = type;
     tok->content = duplicate(content);
@@ -397,23 +395,25 @@ Token* identifyToken(Tokenizer* _Tok){
     return tok;
 }
 
-TokenHead* parseTokens(Tokenizer* _Tok, char* endOfCode){
+TokenHead* parseTokens(Tokenizer* _Tok){
     TokenHead* head = (TokenHead*) malloc(sizeof(TokenHead));
     Token* newToken;
-    int first = 1;
+    bool first = true;
 
-    while(_Tok->start < endOfCode){
+    while(_Tok->start < _Tok->endOfInput){
         newToken = identifyToken(_Tok);
-
-        if(first == 1 && newToken && newToken->type != BLANK)
-        { createList(head, newToken->type, newToken->content); first = 0; continue; }
+        _Tok->start += length(newToken->content);
 
         if(newToken->type != BLANK){
-            addToken(head, newToken->type, newToken->content);
+            if(first){
+                createList(head, newToken->type, newToken->content);
+                first = false;
+            } else {
+                addToken(head, newToken->type, newToken->content);
+            }
         }
 
         free(newToken);
-        //_Tok->start++; I'm actually leaving this bug-causing line as a monument to human stupidity (Tokenizer scrolling is already done inside the identifyToken function, causing double scrolling and thus skipping some chars)
     }
 
     return head;
@@ -423,7 +423,8 @@ TokenHead* lexer_entryPoint(char* filename){
     char* code = loadFile(filename);
     Tokenizer* tokenizer = (Tokenizer*) malloc(sizeof(Tokenizer));
     tokenizer->start = code;
-    TokenHead* tokens = parseTokens(tokenizer, code + length(code));
+    tokenizer->endOfInput = code + length(code);
+    TokenHead* tokens = parseTokens(tokenizer);
     return tokens;
 }
 
