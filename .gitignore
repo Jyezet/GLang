@@ -54,3 +54,4 @@ dkms.conf
 # Extra
 *.png
 *.jpg
+.vscode/
