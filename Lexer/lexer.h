@@ -92,6 +92,16 @@ Token* identifyToken(Tokenizer* _Tok){
             type = BLANK;
             content = const_cast_str(" ");
             break;
+        case '.':
+            if(_Tok->start[1] == '.' && _Tok->start[2] == '.'){
+                content = const_cast_str("...");
+                type = UNPACK_OP;
+                break;
+            }
+
+            content = const_cast_str(".");
+            type = PROPERTY_OP;
+            break;
         case '=':
             if(_Tok->start[1] == '='){ // ==
                 content = const_cast_str("==");
