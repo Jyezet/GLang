@@ -1,5 +1,5 @@
-#ifndef INTERPRETER_H
-#define INTERPRETER_H
+#ifndef COMPILER_H
+#define COMPILER_H
 
 #pragma once
 #include "../Parser/syntax_tree.h"

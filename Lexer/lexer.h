@@ -132,6 +132,8 @@ Token* identifyToken(Tokenizer* _Tok){
             content = const_cast_str("?");
             if(lastTok.type == RET_TYPE_OP){
                 type = UNDEF_RETTYPE_OP;
+            } else if(lastTok.type == EXTENDS_KEYWORD){
+                type = TRAITLESS_EXTENSION_OP;
             } else {
                 type = AUTO_CONV_OP;
             }
@@ -345,6 +347,11 @@ Token* identifyToken(Tokenizer* _Tok){
 
             if(compare(content, "fn")){
                 type = FN_KEYWORD;
+                break;
+            }
+
+            if(compare(content, "in")){
+                type = IN_OP;
                 break;
             }
 

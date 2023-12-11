@@ -52,6 +52,8 @@ enum TOKEN{
     ATTRIBUTE_OP, // @ operator, to give indications to the compiler
     UNDEF_RETTYPE_OP, // ? operator, to indicate a function's return type is not defined
     AUTO_CONV_OP, // ? operator, to convert types of arguments to make them fit their desired datatype
+    TRAITLESS_EXTENSION_OP, // ? operator, to make a struct extend a non-existent trait (Custom functions)
+    IN_OP, // for OOP iterations
 
     /* --- Braces --- */
     LEFT_PARENTH,
