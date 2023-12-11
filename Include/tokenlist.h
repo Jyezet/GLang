@@ -2,7 +2,6 @@
 #define TOKENLIST_H
 
 enum TOKEN{
-    EOI,
     END,
     BLANK,
     IDENTIFIER, // Variable/function/enum/class/etc names
@@ -42,12 +41,17 @@ enum TOKEN{
     DIVIDE_OP,
     DIVIDE_ASSIGN_OP,
     POWER_OP,
+    POWER_ASSIGN_OP,
     MOD_OP,
     CODE_BLOCK_OP, // => operator, indicates what follows is a code block
     RET_TYPE_OP, // -> operator, indicates what follows is a function's return datatype
+    PROPERTY_OP,
+    UNPACK_OP, // ... operator, unpack lists, create variadic functions, etc
     SCOPE_RESOLVER_OP,
     LIBRARY_RESOLVER_OP,
-    ATTRIBUTE_OP, // @ operator, to indicate stuff to the interpreter
+    ATTRIBUTE_OP, // @ operator, to give indications to the compiler
+    UNDEF_RETTYPE_OP, // ? operator, to indicate a function's return type is not defined
+    AUTO_CONV_OP, // ? operator, to convert types of arguments to make them fit their desired datatype
 
     /* --- Braces --- */
     LEFT_PARENTH,
@@ -63,7 +67,10 @@ enum TOKEN{
     MEM_KEYWORD,
     BRING_KEYWORD,
     FN_KEYWORD,
-    INCLUDE_KEYWORD
+    INCLUDE_KEYWORD,
+    STRUCT_KEYWORD,
+    TRAIT_KEYWORD,
+    EXTENDS_KEYWORD
 };
 
 #endif

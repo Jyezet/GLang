@@ -128,6 +128,14 @@ Token* identifyToken(Tokenizer* _Tok){
             content = const_cast_str("!");
             type = NOT_OP; // !
             break;
+        case '?':
+            content = const_cast_str("?");
+            if(lastTok.type == RET_TYPE_OP){
+                type = UNDEF_RETTYPE_OP;
+            } else {
+                type = AUTO_CONV_OP;
+            }
+            break;
         case '>':
             if(_Tok->start[1] == '='){ // >=
                 content = const_cast_str(">=");
@@ -212,6 +220,12 @@ Token* identifyToken(Tokenizer* _Tok){
             break;
         case '*':
             if(_Tok->start[1] == '*'){
+                if(_Tok->start[2] == '='){
+                    content = const_cast_str("**=");
+                    type = POWER_ASSIGN_OP;
+
+                }
+
                 content = const_cast_str("**");
                 type = POWER_OP;
                 break;
@@ -376,6 +390,21 @@ Token* identifyToken(Tokenizer* _Tok){
 
             if(compare(content, "true") || compare(content, "false")){
                 type = BOOL_LITERAL;
+                break;
+            }
+
+            if(compare(content, "struct")){
+                type = STRUCT_KEYWORD;
+                break;
+            }
+
+            if(compare(content, "trait")){
+                type = TRAIT_KEYWORD;
+                break;
+            }
+
+            if(compare(content, "extends")){
+                type = EXTENDS_KEYWORD;
                 break;
             }
 

@@ -65,6 +65,7 @@ typedef struct Statement{
 typedef struct{
     Statement* first_stmt;
     Statement* last_stmt;
+    int symbols;
 } ParsedTree;
 
 #endif

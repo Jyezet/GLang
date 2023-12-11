@@ -109,4 +109,10 @@ char* concatenate(const char* str1, const char* str2){
     return newStr;
 }
 
+void set_memory(void* ptr, int value, unsigned int size){
+    for(int i = 0; i < size; i++){
+        *((int*) ptr + i) = value;
+    }
+}
+
 #endif
