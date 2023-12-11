@@ -1,6 +1,0 @@
-fn main() -> {
-	let var = 4;
-	let var2 = "code";
-	print("{} {}", [var, var2]);
-	return;
-}
